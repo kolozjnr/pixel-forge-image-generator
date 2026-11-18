@@ -5,7 +5,6 @@ import type { Passkey } from '@/types/auth';
 import Heading from '@/components/Heading.vue';
 import PasskeyItem from '@/components/PasskeyItem.vue';
 import PasskeyRegister from '@/components/PasskeyRegister.vue';
-import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
 
 export type Props = {
     canManagePasskeys?: boolean;
@@ -16,13 +15,6 @@ withDefaults(defineProps<Props>(), {
     canManagePasskeys: false,
     passkeys: () => [],
 });
-
-const handleDelete = (id: number, onError: () => void) => {
-    router.delete(destroy.url(id), {
-        preserveScroll: true,
-        onError,
-    });
-};
 
 const handleRegisterSuccess = () => {
     router.reload();
@@ -43,7 +35,6 @@ const handleRegisterSuccess = () => {
                     v-for="passkey in passkeys"
                     :key="passkey.id"
                     :passkey="passkey"
-                    @remove="handleDelete"
                 />
             </template>
 
