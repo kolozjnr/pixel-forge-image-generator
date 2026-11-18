@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, ImagePlus, Plus, Sparkles, X } from '@lucide/vue';
 import { useLoadingMessages } from '@/composables/useLoadingMessages';
 import { dashboard } from '@/routes';
@@ -49,6 +49,29 @@ watch(() => [form.prompt, form.size, form.quality, form.reference_images.length]
 const { current: loadingMessage } = useLoadingMessages(() => form.processing);
 const generateLabel = computed(() => (form.processing ? `${loadingMessage.value.icon} ${loadingMessage.value.text}` : 'Generate image'));
 
+const promptDraftKey = `pixel-forge:create-prompt:${usePage().props.auth.user.id}`;
+
+function savePromptDraft(prompt: string): void {
+    if (prompt) {
+        localStorage.setItem(promptDraftKey, prompt);
+    } else {
+        localStorage.removeItem(promptDraftKey);
+    }
+}
+
+watch(() => form.prompt, savePromptDraft);
+
+onMounted(() => {
+    const draft = localStorage.getItem(promptDraftKey);
+    if (draft && !form.prompt) {
+        form.prompt = draft;
+    }
+});
+
+function submit() {
+    form.post('/generations', { onSuccess: () => localStorage.removeItem(promptDraftKey) });
+}
+
 function addReference() {
     const value = referenceDraft.value.trim();
     try {
@@ -66,7 +89,7 @@ function addReference() {
     <Head title="Create image" />
     <main class="min-h-full bg-[#f8f9fc] p-5 text-[#202133] dark:bg-[#10111a] dark:text-white sm:p-8">
         <div class="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
-            <form class="flex flex-col gap-6" @submit.prevent="form.post('/generations')">
+            <form class="flex flex-col gap-6" @submit.prevent="submit">
                 <header><p class="text-sm font-semibold text-[#6957e8]">IMAGE WORKSPACE</p><h1 class="mt-2 text-3xl font-semibold tracking-tight">Create something new</h1><p class="mt-2 text-sm text-[#85889a]">Describe the image you want to bring to life.</p></header>
                 <section class="rounded-2xl border border-[#e9eaf1] bg-white p-5 dark:border-white/10 dark:bg-[#191b27]">
                     <div class="flex items-center justify-between"><label for="prompt" class="text-sm font-semibold">Your prompt</label><button type="button" class="text-xs font-medium text-[#6957e8]" @click="form.prompt = ''">Clear prompt</button></div>
