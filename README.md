@@ -98,6 +98,12 @@ Use separate Pixelforge credentials for each environment. Never commit `.env` or
 
 `.env.example` uses production-oriented PostgreSQL/S3 values. Override them in local `.env` as needed.
 
+### Neon PostgreSQL
+
+Laravel's native `pgsql` PDO driver is used; no Neon-specific Node.js database driver is required for this PHP application. The PostgreSQL connection reads `DATABASE_URL` first and falls back to Laravel's `DB_URL` or the individual `DB_HOST`/`DB_DATABASE` settings. Neon connection strings should use TLS (`sslmode=require`). For server runtimes with concurrent requests or workers, use Neon's pooled connection URL for the app runtime; use the direct connection URL for database administration if needed. Keep the connection string in server-side `.env`/secret configuration only.
+
+To link this repository to an existing Neon project with the Neon CLI, initialize the project/branch configuration, deploy its declared services, and pull the branch environment into `.env`. The app requires the resulting PostgreSQL connection string to be available as `DATABASE_URL`, with `DB_CONNECTION=pgsql`. After provisioning, run migrations and verify with `php artisan migrate:status` and an authenticated app request. Do not commit generated Neon credentials or local environment files.
+
 ## Development webhooks
 
 Pixelforge requires a public HTTP/HTTPS URL; localhost and private addresses are rejected. Run Laravel on port 8000 and expose it from another terminal:
